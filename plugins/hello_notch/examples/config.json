@@ -1,0 +1,13 @@
+{
+  "plugin_id": "hello_notch",
+  "config": {
+    "client": {
+      "greeting": "hello"
+    },
+    "server": {}
+  },
+  "secret_refs": {
+    "client": {},
+    "server": {}
+  }
+}

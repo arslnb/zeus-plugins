@@ -1,0 +1,17 @@
+{
+  "id": "hello_notch",
+  "name": "Hello Notch",
+  "version": "1.0.0",
+  "summary": "Simple daemon plugin that returns a deterministic ping response.",
+  "owner": "arslnb",
+  "runtime": [
+    "client"
+  ],
+  "categories": [
+    "examples",
+    "productivity"
+  ],
+  "min_zeus_version": "1.0.0",
+  "source_repo": "https://github.com/arslnb/zeus-plugins",
+  "license": "MIT"
+}

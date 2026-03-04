@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arslnb.com/schemas/zeus.plugin.schema.json",
+  "title": "Zeus Plugin Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "version",
+    "description",
+    "components",
+    "config_schema"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 80
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 200
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "client": { "$ref": "#/$defs/componentClient" },
+        "server": { "$ref": "#/$defs/componentServer" }
+      }
+    },
+    "config_schema": {
+      "type": "object",
+      "required": ["client", "server"],
+      "additionalProperties": false,
+      "properties": {
+        "client": { "type": "object" },
+        "server": { "type": "object" }
+      }
+    }
+  },
+  "$defs": {
+    "componentClient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "entry"],
+      "properties": {
+        "runtime": { "type": "string", "const": "python" },
+        "entry": { "type": "string", "pattern": "^[a-z0-9_./-]+\\.py$" }
+      }
+    },
+    "componentServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "entry"],
+      "properties": {
+        "runtime": { "type": "string", "const": "python" },
+        "entry": { "type": "string", "pattern": "^[a-z0-9_./-]+\\.py$" },
+        "channels": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
