@@ -19,6 +19,28 @@
     "manifest_path": "plugins/email_digest/zeus.plugin.json"
   },
   {
+    "id": "gws",
+    "name": "Google Workspace",
+    "version": "0.1.0",
+    "summary": "Google Workspace plugin using gws CLI for Gmail, Drive, and Calendar operations.",
+    "owner": "arslnb",
+    "runtime": [
+      "client",
+      "server"
+    ],
+    "categories": [
+      "email",
+      "calendar",
+      "drive",
+      "productivity"
+    ],
+    "min_zeus_version": "1.0.0",
+    "source_repo": "https://github.com/arslnb/zeus-plugins",
+    "license": "MIT",
+    "metadata_path": "plugins/gws/metadata.json",
+    "manifest_path": "plugins/gws/zeus.plugin.json"
+  },
+  {
     "id": "hello_notch",
     "name": "Hello Notch",
     "version": "1.0.0",

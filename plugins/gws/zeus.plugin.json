@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "gws",
+  "name": "Google Workspace",
+  "version": "0.1.0",
+  "description": "Run Google Workspace operations through the gws CLI, including Gmail inbox triage.",
+  "components": {
+    "client": {
+      "runtime": "python",
+      "entry": "client/plugin.py"
+    },
+    "server": {
+      "runtime": "python",
+      "entry": "server/plugin.py",
+      "channels": []
+    }
+  },
+  "config_schema": {
+    "client": {
+      "gws_binary": {
+        "type": "string",
+        "secret": false,
+        "required": false,
+        "description": "Path or executable name for the Google Workspace CLI.",
+        "default": "gws"
+      },
+      "default_user_id": {
+        "type": "string",
+        "secret": false,
+        "required": false,
+        "description": "Default Gmail user id for mailbox operations.",
+        "default": "me"
+      },
+      "default_query": {
+        "type": "string",
+        "secret": false,
+        "required": false,
+        "description": "Default Gmail query for unread message triage.",
+        "default": "in:inbox is:unread"
+      },
+      "default_max_results": {
+        "type": "integer",
+        "secret": false,
+        "required": false,
+        "description": "Default Gmail unread list size (1..25).",
+        "default": 5
+      },
+      "timeout_seconds": {
+        "type": "integer",
+        "secret": false,
+        "required": false,
+        "description": "Timeout for gws subprocess calls.",
+        "default": 45
+      }
+    },
+    "server": {}
+  }
+}

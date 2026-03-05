@@ -1,0 +1,17 @@
+{
+  "plugin_id": "gws",
+  "config": {
+    "client": {
+      "gws_binary": "gws",
+      "default_user_id": "me",
+      "default_query": "in:inbox is:unread",
+      "default_max_results": 5,
+      "timeout_seconds": 45
+    },
+    "server": {}
+  },
+  "secret_refs": {
+    "client": {},
+    "server": {}
+  }
+}
