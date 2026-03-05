@@ -15,8 +15,8 @@
   ],
   "properties": {
     "schema_version": {
-      "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+$"
+      "type": "integer",
+      "const": 1
     },
     "id": {
       "type": "string",
@@ -25,7 +25,7 @@
     "name": {
       "type": "string",
       "minLength": 2,
-      "maxLength": 80
+      "maxLength": 120
     },
     "version": {
       "type": "string",
@@ -34,24 +34,209 @@
     "description": {
       "type": "string",
       "minLength": 8,
-      "maxLength": 200
+      "maxLength": 400
     },
     "components": {
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "client": { "$ref": "#/$defs/componentClient" },
-        "server": { "$ref": "#/$defs/componentServer" }
+        "client": {
+          "$ref": "#/$defs/componentClient"
+        },
+        "server": {
+          "$ref": "#/$defs/componentServer"
+        }
       }
     },
     "config_schema": {
       "type": "object",
-      "required": ["client", "server"],
+      "required": [
+        "client",
+        "server"
+      ],
       "additionalProperties": false,
       "properties": {
-        "client": { "type": "object" },
-        "server": { "type": "object" }
+        "client": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/configField"
+          }
+        },
+        "server": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/configField"
+          }
+        }
+      }
+    },
+    "secret_storage": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "vault"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "default": {
+              "type": "string",
+              "enum": [
+                "vault"
+              ]
+            },
+            "fields": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "vault"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "prerequisites": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cli": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cliPrerequisite"
+          }
+        },
+        "environment_check": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": true
+            }
+          ]
+        }
+      }
+    },
+    "oauth": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "providers",
+            "cli_sequence"
+          ]
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/oauthProvider"
+          }
+        },
+        "setup_command": {
+          "type": "string"
+        },
+        "login_command": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "agent_prompt": {
+          "type": "string"
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bundled": {
+          "type": "boolean"
+        },
+        "path": {
+          "type": "string"
+        },
+        "auto_install": {
+          "type": "boolean"
+        },
+        "auto_enable": {
+          "type": "boolean"
+        },
+        "uninstall_policy": {
+          "type": "string",
+          "enum": [
+            "remove",
+            "retain"
+          ]
+        }
+      }
+    },
+    "automations": {
+      "type": "object"
+    },
+    "proactive": {
+      "type": "object"
+    },
+    "runtime_policy": {
+      "type": "object"
+    },
+    "tools": {
+      "type": "array"
+    },
+    "ui_hints": {
+      "type": "object"
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "gateway": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "http": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cli": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hook_phases": {
+      "type": "array",
+      "items": {
+        "type": "string"
       }
     }
   },
@@ -59,22 +244,202 @@
     "componentClient": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["runtime", "entry"],
+      "required": [
+        "runtime",
+        "entry"
+      ],
       "properties": {
-        "runtime": { "type": "string", "const": "python" },
-        "entry": { "type": "string", "pattern": "^[a-z0-9_./-]+\\.py$" }
+        "runtime": {
+          "type": "string",
+          "const": "python"
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^[a-z0-9_./-]+\\.py$"
+        }
       }
     },
     "componentServer": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["runtime", "entry"],
+      "required": [
+        "runtime",
+        "entry"
+      ],
       "properties": {
-        "runtime": { "type": "string", "const": "python" },
-        "entry": { "type": "string", "pattern": "^[a-z0-9_./-]+\\.py$" },
+        "runtime": {
+          "type": "string",
+          "const": "python"
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^[a-z0-9_./-]+\\.py$"
+        },
         "channels": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "configField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "secret"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean",
+            "object",
+            "array"
+          ]
+        },
+        "secret": {
+          "type": "boolean"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "default": {}
+      }
+    },
+    "cliPrerequisite": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "binary": {
+              "type": "string"
+            },
+            "command": {
+              "type": "string"
+            },
+            "required": {
+              "type": "boolean"
+            },
+            "check_command": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "install_hint": {
+              "type": "string"
+            },
+            "install_url": {
+              "type": "string"
+            },
+            "docs_url": {
+              "type": "string"
+            },
+            "auto_install_commands": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "darwin": {
+                  "type": "string"
+                },
+                "linux": {
+                  "type": "string"
+                },
+                "windows": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "oauthProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "authorization_url",
+        "token_url",
+        "client_id_field",
+        "client_secret_field"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "component": {
+          "type": "string",
+          "enum": [
+            "client",
+            "server"
+          ]
+        },
+        "authorization_url": {
+          "type": "string"
+        },
+        "token_url": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pkce": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "disabled"
+          ]
+        },
+        "client_id_field": {
+          "type": "string"
+        },
+        "client_secret_field": {
+          "type": "string"
+        },
+        "auth_params": {
+          "type": "object"
+        },
+        "token_params": {
+          "type": "object"
+        },
+        "supports_refresh": {
+          "type": "boolean"
         }
       }
     }

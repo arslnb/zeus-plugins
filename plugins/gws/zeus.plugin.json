@@ -54,5 +54,46 @@
       }
     },
     "server": {}
+  },
+  "secret_storage": "vault",
+  "prerequisites": {
+    "cli": [
+      {
+        "name": "Google Workspace CLI",
+        "binary": "gws",
+        "required": true,
+        "install_hint": "npm install -g @googleworkspace/cli",
+        "install_url": "https://github.com/googleworkspace/cli",
+        "auto_install_commands": {
+          "darwin": "npm install -g @googleworkspace/cli",
+          "linux": "npm install -g @googleworkspace/cli"
+        }
+      },
+      {
+        "name": "Google Cloud SDK",
+        "binary": "gcloud",
+        "required": true,
+        "install_hint": "brew install --cask google-cloud-sdk",
+        "install_url": "https://cloud.google.com/sdk/docs/install",
+        "auto_install_commands": {
+          "darwin": "brew install --cask google-cloud-sdk",
+          "linux": "curl -sSL https://sdk.cloud.google.com | bash"
+        }
+      }
+    ]
+  },
+  "oauth": {
+    "mode": "cli_sequence",
+    "description": "Runs the gws agent-assisted auth flow in the daemon.",
+    "setup_command": "gws auth setup",
+    "login_command": "gws auth login",
+    "agent_prompt": "Use gws auth setup once and gws auth login for refresh; follow any browser prompts."
+  },
+  "skills": {
+    "bundled": true,
+    "path": "skills",
+    "auto_install": true,
+    "auto_enable": true,
+    "uninstall_policy": "remove"
   }
 }

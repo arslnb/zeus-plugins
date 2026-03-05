@@ -1,24 +1,5 @@
 [
   {
-    "id": "email_digest",
-    "name": "Email Digest",
-    "version": "0.3.0",
-    "summary": "Builds a daily inbox digest and sends a summary to your preferred channel.",
-    "owner": "arslnb",
-    "runtime": [
-      "client"
-    ],
-    "categories": [
-      "email",
-      "automation"
-    ],
-    "min_zeus_version": "1.0.0",
-    "source_repo": "https://github.com/arslnb/zeus-plugins",
-    "license": "MIT",
-    "metadata_path": "plugins/email_digest/metadata.json",
-    "manifest_path": "plugins/email_digest/zeus.plugin.json"
-  },
-  {
     "id": "gws",
     "name": "Google Workspace",
     "version": "0.1.0",
@@ -39,24 +20,5 @@
     "license": "MIT",
     "metadata_path": "plugins/gws/metadata.json",
     "manifest_path": "plugins/gws/zeus.plugin.json"
-  },
-  {
-    "id": "hello_notch",
-    "name": "Hello Notch",
-    "version": "1.0.0",
-    "summary": "Simple daemon plugin that returns a deterministic ping response.",
-    "owner": "arslnb",
-    "runtime": [
-      "client"
-    ],
-    "categories": [
-      "examples",
-      "productivity"
-    ],
-    "min_zeus_version": "1.0.0",
-    "source_repo": "https://github.com/arslnb/zeus-plugins",
-    "license": "MIT",
-    "metadata_path": "plugins/hello_notch/metadata.json",
-    "manifest_path": "plugins/hello_notch/zeus.plugin.json"
   }
 ]

@@ -107,16 +107,6 @@ def validate_plugin_folder(repo_root: Path, plugin_dir: Path) -> list[Issue]:
 
 def validate_registry(repo_root: Path) -> list[Issue]:
     issues: list[Issue] = []
-    plugins_dir = repo_root / "plugins"
-    if not plugins_dir.exists():
-        return [Issue(code="FILES", message="Missing plugins/ directory", path=str(plugins_dir))]
-
-    plugin_dirs = sorted([p for p in plugins_dir.iterdir() if p.is_dir()])
-    discovered_ids = [p.name for p in plugin_dirs]
-
-    for plugin_dir in plugin_dirs:
-        issues.extend(validate_plugin_folder(repo_root, plugin_dir))
-
     index_path = repo_root / "index.json"
     if not index_path.exists():
         issues.append(Issue(code="FILES", message="Missing index.json", path=str(index_path)))
@@ -132,7 +122,7 @@ def validate_registry(repo_root: Path) -> list[Issue]:
         issues.append(Issue(code="SCHEMA", message="index.json must be an array", path=str(index_path)))
         return issues
 
-    indexed_ids: list[str] = []
+    seen_ids: set[str] = set()
     for i, entry in enumerate(index_data):
         if not isinstance(entry, dict):
             issues.append(Issue(code="SCHEMA", message="index entry must be an object", path=f"{index_path}:{i}"))
@@ -143,7 +133,17 @@ def validate_registry(repo_root: Path) -> list[Issue]:
         if not isinstance(plugin_id, str):
             issues.append(Issue(code="SCHEMA", message="index entry id must be string", path=f"{index_path}:{i}"))
             continue
-        indexed_ids.append(plugin_id)
+        if plugin_id in seen_ids:
+            issues.append(Issue(code="INDEX", message=f"duplicate plugin id '{plugin_id}'", path=f"{index_path}:{i}"))
+            continue
+        seen_ids.add(plugin_id)
+        if not isinstance(metadata_path, str) or not metadata_path:
+            issues.append(Issue(code="INDEX", message="metadata_path is required", path=f"{index_path}:{i}"))
+            continue
+        if not isinstance(manifest_path, str) or not manifest_path:
+            issues.append(Issue(code="INDEX", message="manifest_path is required", path=f"{index_path}:{i}"))
+            continue
+
         expected_meta = f"plugins/{plugin_id}/metadata.json"
         expected_manifest = f"plugins/{plugin_id}/zeus.plugin.json"
         if metadata_path != expected_meta:
@@ -162,25 +162,26 @@ def validate_registry(repo_root: Path) -> list[Issue]:
                     path=f"{index_path}:{i}",
                 )
             )
-
-    missing_from_index = sorted(set(discovered_ids) - set(indexed_ids))
-    if missing_from_index:
-        issues.append(
-            Issue(
-                code="INDEX",
-                message=f"Plugins missing from index.json: {', '.join(missing_from_index)}",
-                path=str(index_path),
+        manifest_file = repo_root / manifest_path
+        metadata_file = repo_root / metadata_path
+        if not manifest_file.exists():
+            issues.append(
+                Issue(
+                    code="FILES",
+                    message=f"manifest_path does not exist: {manifest_path}",
+                    path=f"{index_path}:{i}",
+                )
             )
-        )
-
-    extra_in_index = sorted(set(indexed_ids) - set(discovered_ids))
-    if extra_in_index:
-        issues.append(
-            Issue(
-                code="INDEX",
-                message=f"index.json has unknown plugin ids: {', '.join(extra_in_index)}",
-                path=str(index_path),
+            continue
+        if not metadata_file.exists():
+            issues.append(
+                Issue(
+                    code="FILES",
+                    message=f"metadata_path does not exist: {metadata_path}",
+                    path=f"{index_path}:{i}",
+                )
             )
-        )
+            continue
+        issues.extend(validate_plugin_folder(repo_root, manifest_file.parent))
 
     return issues

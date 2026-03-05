@@ -17,9 +17,16 @@ Hybrid Zeus plugin that uses the [Google Workspace CLI (`gws`)](https://github.c
 
 ## Prerequisites
 
+The plugin manifest now declares and auto-installs prerequisites (when possible):
+
+- `gws` via `npm install -g @googleworkspace/cli`
+- `gcloud` via platform-specific install commands
+
+Auth/setup is executed through plugin setup actions:
+
 ```bash
-npm install -g @googleworkspace/cli
 gws auth setup
+gws auth login
 ```
 
 ## Install API call
@@ -30,10 +37,10 @@ curl -sS -X POST "${ZEUS_BASE_URL:-http://localhost:3000}/api/plugins/install" \
   --data @plugins/gws/examples/install.json
 ```
 
-## Config API call
+## Configure API call
 
 ```bash
-curl -sS -X POST "${ZEUS_BASE_URL:-http://localhost:3000}/api/plugins/config" \
+curl -sS -X POST "${ZEUS_BASE_URL:-http://localhost:3000}/api/plugins/configure" \
   -H "Content-Type: application/json" \
   --data @plugins/gws/examples/config.json
 ```
@@ -69,6 +76,6 @@ PY
 - `gws executable not found in PATH`
   - Fix: `npm install -g @googleworkspace/cli` and make sure `gws` is on your PATH.
 - Auth errors (`invalid_grant`, `401`, or no credentials)
-  - Fix: run `gws auth login` (or `gws auth setup` for first-time setup).
+  - Fix: rerun plugin setup (which runs `gws auth setup` and `gws auth login`).
 - Google API disabled (`accessNotConfigured`)
   - Fix: open the `enable_url` returned by `gws`, enable the API, wait ~10 seconds, and retry.

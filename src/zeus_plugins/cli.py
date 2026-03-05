@@ -8,15 +8,15 @@ from pathlib import Path
 from zeus_plugins.validation import Issue, validate_plugin_folder, validate_registry
 
 DEFAULT_MANIFEST = {
-    "schema_version": "1.0",
+    "schema_version": 1,
     "id": "",
     "name": "",
     "version": "0.1.0",
     "description": "",
     "components": {},
     "config_schema": {
-        "client": {"type": "object", "properties": {}, "additionalProperties": True},
-        "server": {"type": "object", "properties": {}, "additionalProperties": True},
+        "client": {},
+        "server": {},
     },
 }
 
@@ -105,7 +105,8 @@ def cmd_init(args: argparse.Namespace) -> int:
         {
             "plugin_id": plugin_id,
             "config": {"client": {}, "server": {}},
-            "secret_refs": {"client": {}, "server": {}},
+            "secrets": {"client": {}, "server": {}},
+            "run_setup": True,
         },
     )
 

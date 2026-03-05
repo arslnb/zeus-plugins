@@ -10,8 +10,9 @@
     },
     "server": {}
   },
-  "secret_refs": {
+  "secrets": {
     "client": {},
     "server": {}
-  }
+  },
+  "run_setup": true
 }
