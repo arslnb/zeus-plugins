@@ -48,6 +48,11 @@ zeus plugin check . --registry --json
   - `type: "open_url"` with `url`, `label`, `description`, optional `platforms`
 - Zeus installs the plugin first, then opens a notch setup thread when required prerequisites are missing. The main Zeus agent creates one todo per missing prerequisite and can auto-run only manifest-declared safe shell commands.
 - Keep auth/setup in `oauth`; keep environment install in `prerequisites`.
+- For CLI auth/setup that may open a browser or require manual work, set:
+  - `oauth.interactive: true`
+  - `oauth.success_check_command`
+  - `oauth.agent_prompt`
+- Zeus will then hand setup to the main Zeus agent in a notch thread, stream the CLI output, wait for the user when needed, and recheck `success_check_command` before marking the plugin ready.
 - Legacy fields (`auto_install_commands`, `install_hint`, `install_url`, `docs_url`) still validate and normalize, but new plugins should author `install_options[]`.
 
 ## Reference implementation
@@ -55,5 +60,5 @@ zeus plugin check . --registry --json
   - catalog allowlisting
   - prerequisite install options
   - Zeus prerequisite handoff
-  - CLI OAuth sequence
+  - interactive CLI OAuth handoff
   - shipped skills

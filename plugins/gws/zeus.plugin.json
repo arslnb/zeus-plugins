@@ -115,9 +115,11 @@
   },
   "oauth": {
     "mode": "cli_sequence",
-    "description": "Runs the gws agent-assisted auth flow in the daemon.",
+    "description": "Runs the gws agent-assisted auth flow through the Zeus setup handoff.",
     "setup_command": "gws auth setup",
-    "agent_prompt": "Use gws auth setup for first-run OAuth bootstrap. If the CLI asks for manual Google Cloud Console setup, complete it and rerun plugin setup."
+    "interactive": true,
+    "success_check_command": "gws auth status",
+    "agent_prompt": "Run gws auth setup in an interactive process session. Stream the output back to the user. If gws prints a browser or Google Cloud Console URL, show it plainly so the user can open it, then wait for them to complete the required manual step. After the flow, verify success with gws auth status."
   },
   "skills": {
     "bundled": true,

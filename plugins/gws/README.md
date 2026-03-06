@@ -28,6 +28,13 @@ Auth/setup is executed through plugin setup actions:
 gws auth setup
 ```
 
+Zeus now treats this as an interactive setup handoff:
+
+- the main Zeus agent runs `gws auth setup` in the notch
+- CLI output is streamed to the user
+- if `gws` prints a browser or Google Cloud Console URL, Zeus surfaces it and waits
+- Zeus verifies completion with `gws auth status`
+
 ## Install API call
 
 ```bash
@@ -75,6 +82,6 @@ PY
 - `gws executable not found in PATH`
   - Fix: `npm install -g @googleworkspace/cli` and make sure `gws` is on your PATH.
 - Auth errors (`invalid_grant`, `401`, or no credentials)
-  - Fix: rerun plugin setup (which runs `gws auth setup`). If `gws` says manual Google Cloud Console setup is required, create a Desktop app OAuth client there first and rerun setup.
+  - Fix: rerun plugin setup (which opens the Zeus interactive setup flow). If `gws` says manual Google Cloud Console setup is required, complete it there, then let Zeus resume and verify with `gws auth status`.
 - Google API disabled (`accessNotConfigured`)
   - Fix: open the `enable_url` returned by `gws`, enable the API, wait ~10 seconds, and retry.

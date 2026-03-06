@@ -152,6 +152,12 @@
         "login_command": {
           "type": "string"
         },
+        "interactive": {
+          "type": "boolean"
+        },
+        "success_check_command": {
+          "type": "string"
+        },
         "description": {
           "type": "string"
         },
