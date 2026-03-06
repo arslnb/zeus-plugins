@@ -18,6 +18,12 @@ DEFAULT_MANIFEST = {
         "client": {},
         "server": {},
     },
+    "prerequisites": {
+        "cli": [],
+    },
+    "oauth": {
+        "mode": "none",
+    },
 }
 
 

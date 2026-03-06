@@ -106,6 +106,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "agent_guidance": {
+          "type": "string"
+        },
         "cli": {
           "type": "array",
           "items": {
@@ -323,6 +326,10 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
             "name": {
               "type": "string"
             },
@@ -374,10 +381,106 @@
             },
             "description": {
               "type": "string"
+            },
+            "why": {
+              "type": "string"
+            },
+            "install_options": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/prerequisiteInstallOption"
+              }
             }
           }
         }
       ]
+    },
+    "prerequisiteInstallOption": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/prerequisiteInstallOptionShell"
+        },
+        {
+          "$ref": "#/$defs/prerequisiteInstallOptionOpenUrl"
+        }
+      ]
+    },
+    "prerequisiteInstallOptionShell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "label",
+        "command"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "shell"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "auto_run": {
+          "type": "boolean"
+        },
+        "requires_admin": {
+          "type": "boolean"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "darwin",
+              "linux",
+              "windows"
+            ]
+          }
+        }
+      }
+    },
+    "prerequisiteInstallOptionOpenUrl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "label",
+        "url"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "open_url"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "darwin",
+              "linux",
+              "windows"
+            ]
+          }
+        }
+      }
     },
     "oauthProvider": {
       "type": "object",

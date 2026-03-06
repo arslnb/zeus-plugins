@@ -26,7 +26,6 @@ Auth/setup is executed through plugin setup actions:
 
 ```bash
 gws auth setup
-gws auth login
 ```
 
 ## Install API call
@@ -76,6 +75,6 @@ PY
 - `gws executable not found in PATH`
   - Fix: `npm install -g @googleworkspace/cli` and make sure `gws` is on your PATH.
 - Auth errors (`invalid_grant`, `401`, or no credentials)
-  - Fix: rerun plugin setup (which runs `gws auth setup` and `gws auth login`).
+  - Fix: rerun plugin setup (which runs `gws auth setup`). If `gws` says manual Google Cloud Console setup is required, create a Desktop app OAuth client there first and rerun setup.
 - Google API disabled (`accessNotConfigured`)
   - Fix: open the `enable_url` returned by `gws`, enable the API, wait ~10 seconds, and retry.

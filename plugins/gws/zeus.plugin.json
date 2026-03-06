@@ -57,28 +57,59 @@
   },
   "secret_storage": "vault",
   "prerequisites": {
+    "agent_guidance": "Install the required CLIs one prerequisite at a time. Auto-run only the manifest-declared shell commands. If a step needs manual work, explain why, open the install docs, and stop after the prerequisite verifies successfully.",
     "cli": [
       {
+        "id": "google_workspace_cli",
         "name": "Google Workspace CLI",
         "binary": "gws",
         "required": true,
-        "install_hint": "npm install -g @googleworkspace/cli",
-        "install_url": "https://github.com/googleworkspace/cli",
-        "auto_install_commands": {
-          "darwin": "npm install -g @googleworkspace/cli",
-          "linux": "npm install -g @googleworkspace/cli"
-        }
+        "why": "This plugin executes Gmail and other Google Workspace actions through the gws CLI.",
+        "check_command": "gws --version",
+        "docs_url": "https://github.com/googleworkspace/cli",
+        "install_options": [
+          {
+            "type": "shell",
+            "label": "Install with npm",
+            "description": "Installs the Google Workspace CLI globally with npm.",
+            "command": "npm install -g @googleworkspace/cli",
+            "auto_run": true,
+            "requires_admin": false,
+            "platforms": ["darwin", "linux"]
+          },
+          {
+            "type": "open_url",
+            "label": "Open install docs",
+            "description": "Use this if npm is unavailable or the automatic install fails.",
+            "url": "https://github.com/googleworkspace/cli"
+          }
+        ]
       },
       {
+        "id": "google_cloud_sdk",
         "name": "Google Cloud SDK",
         "binary": "gcloud",
         "required": true,
-        "install_hint": "brew install --cask google-cloud-sdk",
-        "install_url": "https://cloud.google.com/sdk/docs/install",
-        "auto_install_commands": {
-          "darwin": "brew install --cask google-cloud-sdk",
-          "linux": "curl -sSL https://sdk.cloud.google.com | bash"
-        }
+        "why": "The gws auth flow depends on the Google Cloud SDK being available on the host.",
+        "check_command": "gcloud --version",
+        "docs_url": "https://cloud.google.com/sdk/docs/install",
+        "install_options": [
+          {
+            "type": "shell",
+            "label": "Install with Homebrew",
+            "description": "Uses Homebrew to install the Google Cloud SDK on macOS.",
+            "command": "CLOUDSDK_PYTHON=$(command -v python3) brew install --cask google-cloud-sdk",
+            "auto_run": true,
+            "requires_admin": false,
+            "platforms": ["darwin"]
+          },
+          {
+            "type": "open_url",
+            "label": "Open install docs",
+            "description": "Use the Google Cloud SDK install guide if automatic installation is not available.",
+            "url": "https://cloud.google.com/sdk/docs/install"
+          }
+        ]
       }
     ]
   },
@@ -86,8 +117,7 @@
     "mode": "cli_sequence",
     "description": "Runs the gws agent-assisted auth flow in the daemon.",
     "setup_command": "gws auth setup",
-    "login_command": "gws auth login",
-    "agent_prompt": "Use gws auth setup once and gws auth login for refresh; follow any browser prompts."
+    "agent_prompt": "Use gws auth setup for first-run OAuth bootstrap. If the CLI asks for manual Google Cloud Console setup, complete it and rerun plugin setup."
   },
   "skills": {
     "bundled": true,
