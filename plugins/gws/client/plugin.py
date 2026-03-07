@@ -15,8 +15,80 @@ MAX_RESULTS_LIMIT = 25
 
 def register_tools() -> dict[str, Any]:
     return {
-        "gws_execute": gws_execute,
-        "gws_gmail_unread": gws_gmail_unread,
+        "gws_execute": {
+            "runtime_name": "gws_execute",
+            "description": (
+                "Run an explicit Google Workspace CLI operation through gws. "
+                "Use this for Gmail, Drive, or Calendar actions when you know the exact operation."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string",
+                        "description": "Space-delimited gws operation, for example 'drive files list'.",
+                    },
+                    "params": {
+                        "type": "object",
+                        "description": "Optional JSON object passed via --params.",
+                    },
+                    "body": {
+                        "type": "object",
+                        "description": "Optional JSON object passed via --json.",
+                    },
+                    "extra_args": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Optional extra CLI arguments appended to the gws command.",
+                    },
+                    "timeout_seconds": {
+                        "type": "integer",
+                        "description": "Optional timeout override in seconds.",
+                    },
+                },
+                "required": ["operation"],
+                "additionalProperties": False,
+            },
+            "handler": gws_execute,
+            "risk_level": 1,
+            "side_effect_tier": "B",
+            "idempotent": False,
+            "max_payload_hint": 64000,
+        },
+        "gws_gmail_unread": {
+            "runtime_name": "gws_gmail_unread",
+            "description": (
+                "List unread Gmail inbox messages and return structured summaries "
+                "with sender, subject, date, and snippet."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Optional Gmail search query. Defaults to unread inbox mail.",
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum unread messages to fetch, between 1 and 25.",
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "description": "Optional Gmail user id. Defaults to 'me'.",
+                    },
+                    "timeout_seconds": {
+                        "type": "integer",
+                        "description": "Optional timeout override in seconds.",
+                    },
+                },
+                "additionalProperties": False,
+            },
+            "handler": gws_gmail_unread,
+            "risk_level": 1,
+            "side_effect_tier": "A",
+            "idempotent": True,
+            "max_payload_hint": 32000,
+        },
     }
 
 
@@ -215,7 +287,7 @@ def _run_gws(
         return {
             "ok": False,
             "error": f"gws executable not found in PATH: '{binary}'",
-            "hint": "Install with `npm install -g @googleworkspace/cli` and run `gws auth setup`.",
+            "hint": "Install with `npm install -g @googleworkspace/cli`, then rerun the Zeus plugin Install flow so Zeus can handle auth.",
         }
 
     command = [binary, *operation]

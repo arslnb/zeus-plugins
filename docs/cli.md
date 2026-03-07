@@ -79,14 +79,18 @@ Example:
 - `auto_run: true` is rejected for admin-only/manual URL actions.
 - Auto-run shell commands must be a single explicit command, not a chained script.
 
-## Interactive auth/setup authoring workflow
-1. Keep auth/setup under `oauth`, not `prerequisites`.
+## Interactive auth authoring workflow
+1. Keep auth under `oauth`, not `prerequisites`.
 2. For browser/manual CLI flows, use `mode: "cli_sequence"` with:
    - `interactive: true`
    - `setup_command` and/or `login_command`
    - `success_check_command`
    - `agent_prompt`
-3. Zeus will open a notch thread, let the main Zeus agent run the CLI interactively, and recheck `success_check_command` after the user finishes any browser/manual step.
+3. If the auth command needs plugin settings, use:
+   - `env` for non-secret config fields
+   - `secret_env` for Secret Vault-backed config fields
+   Zeus injects optional bindings only when the referenced config is present; missing required fields still block Install.
+4. Zeus will open a notch thread, let the main Zeus agent run the CLI interactively, and recheck `success_check_command` after the user finishes any browser/manual step.
 
 Example:
 
@@ -95,8 +99,12 @@ Example:
   "oauth": {
     "mode": "cli_sequence",
     "interactive": true,
-    "setup_command": "gws auth setup",
+    "login_command": "gws auth login",
     "success_check_command": "gws auth status",
+    "secret_env": {
+      "GOOGLE_WORKSPACE_CLI_CLIENT_ID": "client.google_client_id",
+      "GOOGLE_WORKSPACE_CLI_CLIENT_SECRET": "client.google_client_secret"
+    },
     "agent_prompt": "If the CLI prints a URL, show it to the user and wait for them to finish the required action."
   }
 }

@@ -2,7 +2,7 @@
   {
     "id": "gws",
     "name": "Google Workspace",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "summary": "Google Workspace plugin using gws CLI for Gmail, Drive, and Calendar operations.",
     "owner": "arslnb",
     "runtime": [

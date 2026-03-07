@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "gws",
   "name": "Google Workspace",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Run Google Workspace operations through the gws CLI, including Gmail inbox triage.",
   "components": {
     "client": {
@@ -23,6 +23,18 @@
         "required": false,
         "description": "Path or executable name for the Google Workspace CLI.",
         "default": "gws"
+      },
+      "google_client_id": {
+        "type": "string",
+        "secret": true,
+        "required": false,
+        "description": "Optional desktop OAuth client ID for the Google Workspace CLI. Leave empty to reuse any existing local gws client config on this Mac."
+      },
+      "google_client_secret": {
+        "type": "string",
+        "secret": true,
+        "required": false,
+        "description": "Optional desktop OAuth client secret paired with the client ID above. Zeus stores it in Secret Vault and injects it only when provided."
       },
       "default_user_id": {
         "type": "string",
@@ -84,42 +96,20 @@
             "url": "https://github.com/googleworkspace/cli"
           }
         ]
-      },
-      {
-        "id": "google_cloud_sdk",
-        "name": "Google Cloud SDK",
-        "binary": "gcloud",
-        "required": true,
-        "why": "The gws auth flow depends on the Google Cloud SDK being available on the host.",
-        "check_command": "gcloud --version",
-        "docs_url": "https://cloud.google.com/sdk/docs/install",
-        "install_options": [
-          {
-            "type": "shell",
-            "label": "Install with Homebrew",
-            "description": "Uses Homebrew to install the Google Cloud SDK on macOS.",
-            "command": "CLOUDSDK_PYTHON=$(command -v python3) brew install --cask google-cloud-sdk",
-            "auto_run": true,
-            "requires_admin": false,
-            "platforms": ["darwin"]
-          },
-          {
-            "type": "open_url",
-            "label": "Open install docs",
-            "description": "Use the Google Cloud SDK install guide if automatic installation is not available.",
-            "url": "https://cloud.google.com/sdk/docs/install"
-          }
-        ]
       }
     ]
   },
   "oauth": {
     "mode": "cli_sequence",
-    "description": "Runs the gws agent-assisted auth flow through the Zeus setup handoff.",
-    "setup_command": "gws auth setup",
+    "description": "Runs the gws browser auth flow through the Zeus install handoff.",
+    "login_command": "gws auth login",
     "interactive": true,
     "success_check_command": "gws auth status",
-    "agent_prompt": "Run gws auth setup in an interactive process session. Stream the output back to the user. If gws prints a browser or Google Cloud Console URL, show it plainly so the user can open it, then wait for them to complete the required manual step. After the flow, verify success with gws auth status."
+    "secret_env": {
+      "GOOGLE_WORKSPACE_CLI_CLIENT_ID": "client.google_client_id",
+      "GOOGLE_WORKSPACE_CLI_CLIENT_SECRET": "client.google_client_secret"
+    },
+    "agent_prompt": "Run gws auth login in an interactive process session. If the Install form stored Google OAuth client credentials, Zeus already provides them from Secret Vault; otherwise gws should use any existing local client config on this Mac. Stream the output back to the user. If gws opens a browser or prints a consent URL, show it plainly and wait for the user to finish. After the flow, verify success with gws auth status."
   },
   "skills": {
     "bundled": true,

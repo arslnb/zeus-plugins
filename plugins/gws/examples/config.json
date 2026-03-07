@@ -11,7 +11,10 @@
     "server": {}
   },
   "secrets": {
-    "client": {},
+    "client": {
+      "google_client_id": "OPTIONAL_GOOGLE_DESKTOP_OAUTH_CLIENT_ID",
+      "google_client_secret": "OPTIONAL_GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET"
+    },
     "server": {}
   },
   "run_setup": true
