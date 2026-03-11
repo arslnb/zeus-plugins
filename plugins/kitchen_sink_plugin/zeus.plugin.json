@@ -2,8 +2,8 @@
   "schema_version": 1,
   "id": "kitchen_sink_plugin",
   "name": "Kitchen Sink Plugin",
-  "version": "1.0.0",
-  "description": "Reusable test fixture covering daemon and server plugin surfaces.",
+  "version": "1.1.0",
+  "description": "Reference plugin covering daemon and server plugin surfaces with a real Telegram channel and GitHub OAuth.",
   "components": {
     "client": {
       "entry": "client/plugin.py",
@@ -139,67 +139,32 @@
   "oauth": {
     "providers": [
       {
-        "id": "client_google",
-        "display_name": "Google (Client)",
-        "component": "client",
-        "authorization_url": "https://accounts.example.com/oauth/authorize",
-        "token_url": "https://accounts.example.com/oauth/token",
-        "scopes": [
-          "openid",
-          "email"
-        ],
-        "pkce": "required",
-        "client_id_field": "client_google_client_id",
-        "client_secret_field": "client_google_client_secret",
-        "supports_refresh": true
-      },
-      {
-        "id": "server_google",
-        "display_name": "Google (Server)",
+        "id": "server_github",
+        "display_name": "GitHub (Server)",
         "component": "server",
-        "authorization_url": "https://accounts.example.com/oauth/authorize",
-        "token_url": "https://accounts.example.com/oauth/token",
+        "authorization_url": "https://github.com/login/oauth/authorize",
+        "token_url": "https://github.com/login/oauth/access_token",
         "scopes": [
-          "openid",
-          "email"
+          "read:user",
+          "user:email",
+          "notifications"
         ],
-        "pkce": "required",
-        "client_id_field": "server_google_client_id",
-        "client_secret_field": "server_google_client_secret",
+        "pkce": "disabled",
+        "client_id_field": "github_client_id",
+        "client_secret_field": "github_client_secret",
         "supports_refresh": true
       }
     ]
   },
   "config_schema": {
-    "client": {
-      "api_base": {
-        "type": "string",
-        "required": false,
-        "secret": false
-      },
-      "api_key": {
-        "type": "string",
-        "required": false,
-        "secret": true
-      },
-      "client_google_client_id": {
-        "type": "string",
-        "required": false,
-        "secret": false
-      },
-      "client_google_client_secret": {
-        "type": "string",
-        "required": false,
-        "secret": true
-      }
-    },
+    "client": {},
     "server": {
-      "server_google_client_id": {
+      "github_client_id": {
         "type": "string",
         "required": false,
         "secret": false
       },
-      "server_google_client_secret": {
+      "github_client_secret": {
         "type": "string",
         "required": false,
         "secret": true
@@ -209,7 +174,7 @@
         "required": false,
         "secret": true
       },
-      "send_token": {
+      "telegram_bot_token": {
         "type": "string",
         "required": false,
         "secret": true

@@ -39,7 +39,7 @@ class KitchenSinkClientPlugin:
             "payload_value": payload.get("value"),
             "hooked_by_plugin": bool(payload.get("hooked_by_plugin", False)),
             "runtime_name": context.get("runtime_name"),
-            "plugin_configured_api_base": str(self.config.get("api_base") or ""),
+            "plugin_configured": bool(self.config),
         }
 
     async def call_command(self, name, payload, context):
