@@ -28,6 +28,55 @@ zeus plugin check plugins/weather_digest --json
 zeus plugin check . --registry --json
 ```
 
+## Build a signed static registry
+
+Generate an Ed25519 keypair once:
+
+```bash
+zeus plugin keygen --out-dir .registry-keys
+```
+
+Publish the approved registry to a static directory:
+
+```bash
+zeus plugin publish . \
+  --output-dir dist/registry \
+  --base-url https://plugins.example.com \
+  --private-key .registry-keys/ed25519-private.pem \
+  --clean
+```
+
+That produces:
+
+- `dist/registry/index.json` for the app catalog
+- `dist/registry/plugins/<plugin_id>/<version>.json` for server installs
+- `dist/registry/artifacts/<plugin_id>/<version>/<plugin_id>-<version>.tgz`
+- `dist/registry/registry-public-key.b64` for `ZEUS_PLUGIN_REGISTRY_PUBLIC_KEY`
+
+Host `dist/registry/` on any static host (GitHub Pages, Cloudflare Pages, S3, R2, Vercel static output, etc.).
+Then set on the Zeus message server:
+
+- `ZEUS_PLUGIN_REGISTRY_BASE_URL=https://plugins.example.com`
+- `ZEUS_PLUGIN_REGISTRY_PUBLIC_KEY=$(cat dist/registry/registry-public-key.b64)`
+
+## GitHub Pages publish pipeline
+
+This repo now includes a GitHub Actions workflow at `.github/workflows/publish-registry.yml`.
+On every push to `main`, it can publish the signed static registry to GitHub Pages.
+
+Set these once in the GitHub repo settings:
+
+- Secret: `ZEUS_REGISTRY_SIGNING_PRIVATE_KEY`
+  - Use the contents of `.registry-keys/ed25519-private.pem` or `.registry-keys/ed25519-private.b64`
+- Optional repository variable: `ZEUS_PLUGIN_REGISTRY_BASE_URL`
+  - Set this only if you use a custom domain
+  - Default is `https://<owner>.github.io/<repo>`
+
+After the workflow runs, the server should use:
+
+- `ZEUS_PLUGIN_REGISTRY_BASE_URL=https://<owner>.github.io/<repo>`
+- `ZEUS_PLUGIN_REGISTRY_PUBLIC_KEY=<contents of dist/registry/registry-public-key.b64>`
+
 ## Submit a plugin
 1. Fork this repo.
 2. Add your plugin under `plugins/<plugin_id>/`.

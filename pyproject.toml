@@ -9,6 +9,7 @@ description = "Zeus plugin registry repository with scaffold and validation CLI"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+  "cryptography>=45.0.0",
   "jsonschema>=4.21.1"
 ]
 

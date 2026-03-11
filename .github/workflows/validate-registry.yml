@@ -27,4 +27,6 @@ jobs:
           python -m pip install .
 
       - name: Validate plugin registry
-        run: zeus plugin check . --registry --json
+        run: |
+          zeus plugin check . --registry --json
+          python -m unittest tests.test_validation tests.test_publish

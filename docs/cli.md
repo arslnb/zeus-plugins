@@ -24,6 +24,79 @@ zeus plugin check plugins/my_plugin --json
 zeus plugin check . --registry --json
 ```
 
+## Generate a signing keypair
+
+```bash
+zeus plugin keygen --out-dir .registry-keys
+```
+
+Writes:
+
+- `.registry-keys/ed25519-private.pem`
+- `.registry-keys/ed25519-public.pem`
+- `.registry-keys/ed25519-private.b64`
+- `.registry-keys/ed25519-public.b64`
+
+Use the private key for publishing and the public key for `ZEUS_PLUGIN_REGISTRY_PUBLIC_KEY` on the Zeus message server.
+
+## Publish a static signed registry
+
+```bash
+zeus plugin publish . \
+  --output-dir dist/registry \
+  --base-url https://plugins.example.com \
+  --private-key .registry-keys/ed25519-private.pem \
+  --clean
+```
+
+Useful flags:
+
+- `--plugin-id kitchen_sink_plugin`: publish only selected approved plugin ids
+- `--json`: print machine-readable output for CI
+- `--clean`: wipe the output directory before writing the new registry build
+
+Publish output layout:
+
+```text
+dist/registry/
+  index.json
+  registry-public-key.b64
+  registry-public-key.pem
+  plugins/
+    kitchen_sink_plugin/
+      1.1.0.json
+  artifacts/
+    kitchen_sink_plugin/
+      1.1.0/
+        kitchen_sink_plugin-1.1.0.tgz
+```
+
+The Zeus app reads `index.json` from the registry base URL. The Zeus message server reads per-plugin signed metadata from `plugins/<plugin_id>/<version>.json`.
+
+## Publish with GitHub Pages
+
+This repo includes `.github/workflows/publish-registry.yml`.
+
+Required GitHub repo settings:
+
+- Secret: `ZEUS_REGISTRY_SIGNING_PRIVATE_KEY`
+- Optional variable: `ZEUS_PLUGIN_REGISTRY_BASE_URL`
+  - leave unset to use the default Pages URL: `https://<owner>.github.io/<repo>`
+
+The workflow will:
+
+1. validate the registry
+2. build `dist/registry`
+3. deploy `dist/registry` to GitHub Pages
+
+For local parity, use:
+
+```bash
+ZEUS_REGISTRY_BASE_URL=https://arslnb.github.io/zeus-plugins \
+ZEUS_REGISTRY_PRIVATE_KEY_FILE=.registry-keys/ed25519-private.pem \
+./scripts/publish_registry.sh
+```
+
 ## Registry validation behavior
 - `zeus plugin check . --registry` validates only plugins that appear in `index.json`.
 - Folders under `plugins/` that are not allowlisted are ignored by registry validation and by the Zeus app catalog.

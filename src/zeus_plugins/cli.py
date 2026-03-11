@@ -5,6 +5,12 @@ import json
 import sys
 from pathlib import Path
 
+from zeus_plugins.publish import (
+    generate_registry_keypair,
+    publish_registry,
+    publish_result_to_json,
+    registry_keypair_to_json,
+)
 from zeus_plugins.validation import Issue, validate_plugin_folder, validate_registry
 
 DEFAULT_MANIFEST = {
@@ -204,6 +210,59 @@ def cmd_check(args: argparse.Namespace) -> int:
     return 0 if not issues else 1
 
 
+def cmd_keygen(args: argparse.Namespace) -> int:
+    try:
+        payload = generate_registry_keypair(
+            Path(args.out_dir),
+            force=bool(args.force),
+        )
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    if args.json:
+        print(json.dumps(registry_keypair_to_json(payload), indent=2))
+    else:
+        print(f"Wrote registry keypair to {Path(args.out_dir).expanduser().resolve()}")
+        print(f"Public key (base64): {payload.public_key_base64}")
+        print(f"Public key file: {payload.public_key_base64_path}")
+    return 0
+
+
+def cmd_publish(args: argparse.Namespace) -> int:
+    repo_root = Path(args.path).expanduser().resolve()
+    if not (repo_root / "index.json").exists():
+        print(f"Could not find index.json under {repo_root}", file=sys.stderr)
+        return 2
+
+    try:
+        payload = publish_registry(
+            repo_root,
+            output_dir=Path(args.output_dir),
+            base_url=args.base_url,
+            private_key=args.private_key,
+            plugin_ids=list(args.plugin_id or []),
+            clean=bool(args.clean),
+        )
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    if args.json:
+        print(json.dumps(publish_result_to_json(payload), indent=2))
+    else:
+        print(f"Wrote static registry to {payload.output_dir}")
+        print(f"Index: {payload.index_path}")
+        print(f"Public key (base64): {payload.public_key_base64}")
+        print(f"Public key file: {payload.public_key_base64_path}")
+        print("Published plugins:")
+        for item in payload.plugins:
+            print(f"- {item.id}@{item.version}")
+            print(f"  metadata: {item.metadata_path}")
+            print(f"  artifact: {item.artifact_path}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="zeus", description="Zeus plugin tooling")
     subparsers = parser.add_subparsers(dest="command")
@@ -229,6 +288,51 @@ def build_parser() -> argparse.ArgumentParser:
     check_parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
     check_parser.add_argument("--registry", action="store_true", help="Force registry-level validation")
     check_parser.set_defaults(func=cmd_check)
+
+    keygen_parser = plugin_subparsers.add_parser("keygen", help="Generate an Ed25519 keypair for the signed registry")
+    keygen_parser.add_argument("--out-dir", default=".registry-keys", help="Directory to write key files into")
+    keygen_parser.add_argument("--force", action="store_true", help="Overwrite existing key files")
+    keygen_parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+    keygen_parser.set_defaults(func=cmd_keygen)
+
+    publish_parser = plugin_subparsers.add_parser(
+        "publish",
+        help="Build a static signed registry tree for approved plugins",
+    )
+    publish_parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Registry repo root containing index.json",
+    )
+    publish_parser.add_argument(
+        "--output-dir",
+        default="dist/registry",
+        help="Directory to write the published static registry into",
+    )
+    publish_parser.add_argument(
+        "--base-url",
+        required=True,
+        help="Public base URL where the published registry will be hosted",
+    )
+    publish_parser.add_argument(
+        "--private-key",
+        required=True,
+        help="Path to the Ed25519 private key (PEM or raw base64)",
+    )
+    publish_parser.add_argument(
+        "--plugin-id",
+        action="append",
+        default=[],
+        help="Limit publish to one or more approved plugin ids",
+    )
+    publish_parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="Delete the output directory before writing the new registry build",
+    )
+    publish_parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+    publish_parser.set_defaults(func=cmd_publish)
 
     return parser
 
