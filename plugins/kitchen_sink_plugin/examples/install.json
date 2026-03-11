@@ -1,0 +1,5 @@
+{
+  "source_type": "registry",
+  "source": "kitchen_sink_plugin",
+  "force": true
+}

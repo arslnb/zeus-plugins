@@ -1,0 +1,12 @@
+{
+  "plugin_id": "kitchen_sink_plugin",
+  "config": {
+    "client": {},
+    "server": {}
+  },
+  "secrets": {
+    "client": {},
+    "server": {}
+  },
+  "run_setup": false
+}

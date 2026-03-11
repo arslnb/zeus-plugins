@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "id": "kitchen_sink_plugin",
+  "name": "Kitchen Sink Plugin",
+  "version": "1.0.0",
+  "description": "Reusable test fixture covering daemon and server plugin surfaces.",
+  "components": {
+    "client": {
+      "entry": "client/plugin.py",
+      "runtime": "python"
+    },
+    "server": {
+      "entry": "server/plugin.py",
+      "runtime": "python",
+      "channels": [
+        "telegram_kitchen_sink"
+      ]
+    }
+  },
+  "tools": [
+    {
+      "name": "kitchen_lookup",
+      "enabled": true,
+      "allow_network": false,
+      "allow_without_approval": true
+    }
+  ],
+  "commands": [
+    "sync_now"
+  ],
+  "services": [
+    "calendar_sync"
+  ],
+  "cli": [
+    "status_cli"
+  ],
+  "providers": [
+    "weather_provider"
+  ],
+  "gateway": [
+    "gateway_route"
+  ],
+  "http": [
+    "http_route"
+  ],
+  "hook_phases": [
+    "before_model_resolve",
+    "before_prompt_build",
+    "before_tool_call",
+    "after_tool_call"
+  ],
+  "runtime_policy": {
+    "network": {
+      "socat_bypass": false
+    },
+    "approval": {
+      "mode": "allow_without_approval"
+    },
+    "tools": {
+      "kitchen_lookup": {
+        "enabled": true,
+        "allow_network": false,
+        "allow_without_approval": true
+      }
+    }
+  },
+  "prerequisites": {
+    "cli": [
+      {
+        "id": "python",
+        "name": "Python",
+        "binary": "python3",
+        "required": true,
+        "why": "Needed to run the kitchen-sink plugin runtime.",
+        "install_options": [
+          {
+            "type": "shell",
+            "label": "Install with Homebrew",
+            "description": "Install Python 3 using Homebrew.",
+            "command": "brew install python",
+            "auto_run": true,
+            "requires_admin": false,
+            "platforms": [
+              "darwin"
+            ]
+          },
+          {
+            "type": "open_url",
+            "label": "Open Python downloads",
+            "description": "Install Python 3 manually.",
+            "url": "https://www.python.org/downloads/"
+          }
+        ]
+      }
+    ],
+    "environment_check": {
+      "client_function": "check_environment",
+      "server_function": "check_server_environment"
+    }
+  },
+  "skills": {
+    "bundled": true,
+    "path": "skills",
+    "auto_install": true,
+    "auto_enable": true,
+    "uninstall_policy": "remove"
+  },
+  "automations": {
+    "behaviors": [
+      {
+        "id": "inbox_focus",
+        "name": "Inbox Focus",
+        "prompt": "Check inbox for urgent partner messages and prepare a reply.",
+        "enabled_by_default": true
+      }
+    ],
+    "scheduled_tasks": [
+      {
+        "id": "hourly_followup",
+        "name": "Hourly Follow-up",
+        "prompt": "Review plugin follow-ups and draft the next action.",
+        "schedule_expression": "0 * * * *",
+        "timezone": "UTC",
+        "enabled_by_default": true
+      }
+    ]
+  },
+  "proactive": {
+    "screen_watch": [
+      {
+        "id": "error_banners",
+        "name": "Error Banners",
+        "prompt": "Watch for runtime errors or failing deploy banners.",
+        "priority": "high",
+        "enabled_by_default": true
+      }
+    ]
+  },
+  "oauth": {
+    "providers": [
+      {
+        "id": "client_google",
+        "display_name": "Google (Client)",
+        "component": "client",
+        "authorization_url": "https://accounts.example.com/oauth/authorize",
+        "token_url": "https://accounts.example.com/oauth/token",
+        "scopes": [
+          "openid",
+          "email"
+        ],
+        "pkce": "required",
+        "client_id_field": "client_google_client_id",
+        "client_secret_field": "client_google_client_secret",
+        "supports_refresh": true
+      },
+      {
+        "id": "server_google",
+        "display_name": "Google (Server)",
+        "component": "server",
+        "authorization_url": "https://accounts.example.com/oauth/authorize",
+        "token_url": "https://accounts.example.com/oauth/token",
+        "scopes": [
+          "openid",
+          "email"
+        ],
+        "pkce": "required",
+        "client_id_field": "server_google_client_id",
+        "client_secret_field": "server_google_client_secret",
+        "supports_refresh": true
+      }
+    ]
+  },
+  "config_schema": {
+    "client": {
+      "api_base": {
+        "type": "string",
+        "required": false,
+        "secret": false
+      },
+      "api_key": {
+        "type": "string",
+        "required": false,
+        "secret": true
+      },
+      "client_google_client_id": {
+        "type": "string",
+        "required": false,
+        "secret": false
+      },
+      "client_google_client_secret": {
+        "type": "string",
+        "required": false,
+        "secret": true
+      }
+    },
+    "server": {
+      "server_google_client_id": {
+        "type": "string",
+        "required": false,
+        "secret": false
+      },
+      "server_google_client_secret": {
+        "type": "string",
+        "required": false,
+        "secret": true
+      },
+      "telegram_webhook_secret": {
+        "type": "string",
+        "required": false,
+        "secret": true
+      },
+      "send_token": {
+        "type": "string",
+        "required": false,
+        "secret": true
+      }
+    }
+  }
+}

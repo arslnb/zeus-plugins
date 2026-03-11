@@ -20,5 +20,25 @@
     "license": "MIT",
     "metadata_path": "plugins/gws/metadata.json",
     "manifest_path": "plugins/gws/zeus.plugin.json"
+  },
+  {
+    "id": "kitchen_sink_plugin",
+    "name": "Kitchen Sink Plugin",
+    "version": "1.0.0",
+    "summary": "Reference plugin that exercises daemon and server plugin surfaces for Zeus testing.",
+    "owner": "arslnb",
+    "runtime": [
+      "client",
+      "server"
+    ],
+    "categories": [
+      "testing",
+      "reference"
+    ],
+    "min_zeus_version": "1.0.0",
+    "source_repo": "https://github.com/arslnb/zeus-plugins",
+    "license": "MIT",
+    "metadata_path": "plugins/kitchen_sink_plugin/metadata.json",
+    "manifest_path": "plugins/kitchen_sink_plugin/zeus.plugin.json"
   }
 ]
