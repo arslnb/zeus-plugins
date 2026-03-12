@@ -64,11 +64,11 @@ dist/registry/
   registry-public-key.pem
   plugins/
     kitchen_sink_plugin/
-      1.1.0.json
+      1.1.1.json
   artifacts/
     kitchen_sink_plugin/
-      1.1.0/
-        kitchen_sink_plugin-1.1.0.tgz
+      1.1.1/
+        kitchen_sink_plugin-1.1.1.tgz
 ```
 
 The Zeus app reads `index.json` from the registry base URL. The Zeus message server reads per-plugin signed metadata from `plugins/<plugin_id>/<version>.json`.

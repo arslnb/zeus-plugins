@@ -53,18 +53,18 @@ Set these server secrets during install/configure:
 
 Set `ZEUS_PUBLIC_BASE_URL` on the messaging server. On plugin enable/reload, the plugin auto-registers:
 
-- webhook URL: `${ZEUS_PUBLIC_BASE_URL}/v1/channels/telegram_kitchen_sink/webhook`
+- webhook URL: `${ZEUS_PUBLIC_BASE_URL}/v1/channels/telegram/webhook`
 - secret token: `${TELEGRAM_WEBHOOK_SECRET}`
 
 Outbound sends use:
 
 ```bash
-curl -sS -X POST "${ZEUS_SERVER_BASE_URL}/v1/client/channels/telegram_kitchen_sink/send" \
+curl -sS -X POST "${ZEUS_SERVER_BASE_URL}/v1/client/channels/telegram/send" \
   -H "Content-Type: application/json" \
   -d '{"chat_id":"<chat id>","text":"hello from zeus"}'
 ```
 
-Normal inbound Telegram messages can also flow through the Mac app's agent loop and reply back through this same send path, because the plugin includes a `metadata.reply_context` payload on inbound envelopes.
+Normal inbound Telegram messages flow through the Mac app's agent loop and reply back through this same send path, because the plugin includes a `metadata.reply_context` payload on inbound envelopes. The plugin no longer exposes Telegram slash commands; replies are agent-mediated.
 
 ### GitHub OAuth
 
@@ -87,19 +87,9 @@ Requested scopes:
 - `user:email`
 - `notifications`
 
-### Optional Telegram Commands
-
-Once `server_github` is connected, the plugin also exposes a few direct server-side bot commands for smoke-testing:
-
-Send these commands to the bot:
-
-- `/help`
-- `/github_me`
-- `/github_notifications`
-
 ## Notes
 
-- The channel is intentionally named `telegram_kitchen_sink`, not `telegram`, so it does not collide with the built-in Telegram adapter.
+- The channel is now named `telegram`. The old built-in Telegram adapter path has been removed from Zeus.
 - The server OAuth provider is a real GitHub OAuth app configuration, not an example URL.
 - The plugin no longer needs a separate GitHub PAT or `api_base` to exercise GitHub. It uses the stored `server_github` OAuth access token.
 - The plugin uses `python3` as its declared prerequisite so it is installable as a real registry package.

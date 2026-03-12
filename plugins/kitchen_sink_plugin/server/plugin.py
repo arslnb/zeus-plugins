@@ -78,6 +78,8 @@ def _extract_telegram_envelopes(payload: dict[str, Any]) -> list[dict[str, Any]]
         dedupe_id = message_id_raw or update_id_raw or secrets.token_hex(8)
         message_id = f"tgk-{chat_id or 'unknown'}-{dedupe_id}"
 
+        sender_class = "owner" if str(chat.get("type") or "").strip().lower() == "private" else "third_party"
+
         envelopes.append(
             {
                 "message_id": message_id,
@@ -90,7 +92,8 @@ def _extract_telegram_envelopes(payload: dict[str, Any]) -> list[dict[str, Any]]
                 "metadata": {
                     "plugin_id": "kitchen_sink_plugin",
                     "provider": "telegram_bot_api",
-                    "source": "telegram_kitchen_sink",
+                    "source": "telegram",
+                    "sender_class": sender_class,
                     "update_id": update_id_raw,
                     "update_type": update_type,
                     "reply_context": {
@@ -287,7 +290,7 @@ class TelegramKitchenSinkAdapter:
         base = str(public_base_url or "").strip().rstrip("/")
         if not base or not self._bot_token:
             return
-        webhook_url = f"{base}/v1/channels/telegram_kitchen_sink/webhook"
+        webhook_url = f"{base}/v1/channels/telegram/webhook"
         ok, detail = await asyncio.to_thread(
             self._set_webhook,
             bot_token=self._bot_token,
@@ -302,62 +305,6 @@ class TelegramKitchenSinkAdapter:
         if challenge:
             return challenge
         return None
-
-    def _command_response(self, command_text: str) -> str | None:
-        command = str(command_text or "").strip().lower()
-        if command in {"/help", "/start", "/github_help"}:
-            return "Kitchen Sink Plugin commands:\n/github_me\n/github_notifications"
-        if command == "/github_me":
-            if not self._github_access_token:
-                return "GitHub is not connected. Connect the server_github OAuth provider first."
-            profile = self._github_request_json(access_token=self._github_access_token, path="/user")
-            if not isinstance(profile, dict):
-                return "GitHub profile lookup returned an invalid response."
-            return _format_github_me(profile)
-        if command == "/github_notifications":
-            if not self._github_access_token:
-                return "GitHub is not connected. Connect the server_github OAuth provider first."
-            rows = self._github_request_json(
-                access_token=self._github_access_token,
-                path="/notifications?all=false&participating=false&per_page=5",
-            )
-            return _format_github_notifications(rows)
-        return None
-
-    async def _maybe_handle_commands(self, envelopes: list[dict[str, Any]]) -> None:
-        if not self._bot_token:
-            return
-        for envelope in envelopes:
-            metadata = envelope.get("metadata") if isinstance(envelope.get("metadata"), dict) else {}
-            raw_message = metadata.get("raw") if isinstance(metadata.get("raw"), dict) else {}
-            chat = metadata.get("chat") if isinstance(metadata.get("chat"), dict) else {}
-            chat_id = str(chat.get("id") or envelope.get("thread_hint") or "").strip()
-            if not chat_id:
-                continue
-            text = str(envelope.get("text") or "").strip()
-            if not text.startswith("/"):
-                continue
-            try:
-                reply_text = await asyncio.to_thread(self._command_response, text)
-            except urllib.error.HTTPError as exc:
-                detail = ""
-                try:
-                    detail = exc.read().decode("utf-8", errors="replace").strip()
-                except Exception:
-                    detail = ""
-                reply_text = f"GitHub API error: {detail or f'http_{exc.code}'}"
-            except Exception as exc:
-                reply_text = f"Command failed: {exc}"
-            if not reply_text:
-                continue
-            reply_to_message_id = str(raw_message.get("message_id") or "").strip() or None
-            await asyncio.to_thread(
-                self._send_message,
-                self._bot_token,
-                chat_id,
-                reply_text,
-                reply_to_message_id,
-            )
 
     async def ingest_webhook(self, request=None, body=b""):
         if self._webhook_secret:
@@ -375,7 +322,6 @@ class TelegramKitchenSinkAdapter:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="payload_must_be_object")
 
         envelopes = _extract_telegram_envelopes(payload)
-        await self._maybe_handle_commands(envelopes)
         return envelopes
 
     async def send(self, payload):
@@ -430,7 +376,7 @@ class KitchenSinkServerPlugin:
         await self._adapter.ensure_webhook(public_base_url=self._public_base_url)
 
     def channels(self):
-        return {"telegram_kitchen_sink": self._adapter}
+        return {"telegram": self._adapter}
 
     def webhooks(self):
         return {

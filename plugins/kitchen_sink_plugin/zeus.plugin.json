@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "kitchen_sink_plugin",
   "name": "Kitchen Sink Plugin",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Reference plugin covering daemon and server plugin surfaces with a real Telegram channel and GitHub OAuth.",
   "components": {
     "client": {
@@ -13,7 +13,7 @@
       "entry": "server/plugin.py",
       "runtime": "python",
       "channels": [
-        "telegram_kitchen_sink"
+        "telegram"
       ]
     }
   },

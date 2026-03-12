@@ -5,11 +5,11 @@ summary: Kitchen sink helper skill for the real Telegram + GitHub OAuth referenc
 
 Use this bundled skill when the Kitchen Sink Plugin is installed.
 
-- Channel name: `telegram_kitchen_sink`
-- Telegram inbound webhook path: `/v1/channels/telegram_kitchen_sink/webhook`
-- Telegram outbound send path: `/v1/client/channels/telegram_kitchen_sink/send`
+- Channel name: `telegram`
+- Telegram inbound webhook path: `/v1/channels/telegram/webhook`
+- Telegram outbound send path: `/v1/client/channels/telegram/send`
 - Telegram config keys: `server.telegram_bot_token`, `server.telegram_webhook_secret`
-- Telegram commands: `/help`, `/github_me`, `/github_notifications`
+- Telegram replies are agent-mediated; the plugin does not define direct slash commands.
 - GitHub OAuth provider id: `server_github`
 - GitHub config keys: `server.github_client_id`, `server.github_client_secret`
 - GitHub access is performed on the server side using the stored `server_github` OAuth token.
