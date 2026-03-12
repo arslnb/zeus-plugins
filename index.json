@@ -24,7 +24,7 @@
   {
     "id": "kitchen_sink_plugin",
     "name": "Kitchen Sink Plugin",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "summary": "Reference plugin that exercises daemon and server plugin surfaces with a real Telegram channel and GitHub OAuth.",
     "owner": "arslnb",
     "runtime": [

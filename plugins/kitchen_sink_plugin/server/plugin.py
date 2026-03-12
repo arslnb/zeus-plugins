@@ -79,6 +79,10 @@ def _extract_telegram_envelopes(payload: dict[str, Any]) -> list[dict[str, Any]]
         message_id = f"tgk-{chat_id or 'unknown'}-{dedupe_id}"
 
         sender_class = "owner" if str(chat.get("type") or "").strip().lower() == "private" else "third_party"
+        processing_context: dict[str, Any] = {"chat_id": chat_id, "chat_action": "typing"}
+        if message_id_raw:
+            processing_context["reaction_to_message_id"] = message_id_raw
+            processing_context["reaction"] = [{"type": "emoji", "emoji": "👀"}]
 
         envelopes.append(
             {
@@ -99,6 +103,7 @@ def _extract_telegram_envelopes(payload: dict[str, Any]) -> list[dict[str, Any]]
                     "reply_context": {
                         "chat_id": chat_id,
                     },
+                    "processing_context": processing_context,
                     "chat": {
                         "id": chat.get("id"),
                         "type": chat.get("type"),
@@ -166,6 +171,93 @@ def _telegram_send_message(
         return True, provider_message_id, ""
 
     return True, "", ""
+
+
+def _telegram_send_chat_action(
+    bot_token: str,
+    chat_id: str,
+    action: str,
+) -> tuple[bool, str]:
+    endpoint = f"https://api.telegram.org/bot{bot_token}/sendChatAction"
+    payload: dict[str, Any] = {
+        "chat_id": chat_id,
+        "action": action,
+    }
+    encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    request = urllib.request.Request(
+        endpoint,
+        data=encoded,
+        method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:
+            body = response.read()
+    except urllib.error.HTTPError as exc:
+        error_body = b""
+        try:
+            error_body = exc.read()
+        except Exception:
+            error_body = b""
+        detail = error_body.decode("utf-8", errors="replace").strip() or f"http_{exc.code}"
+        return False, detail
+    except Exception as exc:
+        return False, str(exc)
+
+    try:
+        parsed = json.loads(body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return False, "invalid_telegram_chat_action_response"
+    if not isinstance(parsed, dict):
+        return False, "telegram_chat_action_response_not_object"
+    if not bool(parsed.get("ok")):
+        return False, str(parsed.get("description") or "telegram_chat_action_failed")
+    return True, ""
+
+
+def _telegram_set_message_reaction(
+    bot_token: str,
+    chat_id: str,
+    message_id: str,
+    reaction: list[dict[str, Any]],
+) -> tuple[bool, str]:
+    endpoint = f"https://api.telegram.org/bot{bot_token}/setMessageReaction"
+    normalized_message_id: Any = int(message_id) if str(message_id).isdigit() else str(message_id)
+    payload: dict[str, Any] = {
+        "chat_id": chat_id,
+        "message_id": normalized_message_id,
+        "reaction": reaction,
+    }
+    encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    request = urllib.request.Request(
+        endpoint,
+        data=encoded,
+        method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:
+            body = response.read()
+    except urllib.error.HTTPError as exc:
+        error_body = b""
+        try:
+            error_body = exc.read()
+        except Exception:
+            error_body = b""
+        detail = error_body.decode("utf-8", errors="replace").strip() or f"http_{exc.code}"
+        return False, detail
+    except Exception as exc:
+        return False, str(exc)
+
+    try:
+        parsed = json.loads(body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return False, "invalid_telegram_reaction_response"
+    if not isinstance(parsed, dict):
+        return False, "telegram_reaction_response_not_object"
+    if not bool(parsed.get("ok")):
+        return False, str(parsed.get("description") or "telegram_reaction_failed")
+    return True, ""
 
 
 def _telegram_set_webhook(
@@ -276,6 +368,8 @@ class TelegramKitchenSinkAdapter:
         bot_token: str = "",
         github_access_token: str = "",
         send_message_fn=None,
+        send_chat_action_fn=None,
+        set_message_reaction_fn=None,
         set_webhook_fn=None,
         github_request_fn=None,
     ) -> None:
@@ -283,6 +377,8 @@ class TelegramKitchenSinkAdapter:
         self._bot_token = str(bot_token or "").strip()
         self._github_access_token = str(github_access_token or "").strip()
         self._send_message = send_message_fn or _telegram_send_message
+        self._send_chat_action = send_chat_action_fn or _telegram_send_chat_action
+        self._set_message_reaction = set_message_reaction_fn or _telegram_set_message_reaction
         self._set_webhook = set_webhook_fn or _telegram_set_webhook
         self._github_request_json = github_request_fn or _github_request_json
 
@@ -327,34 +423,85 @@ class TelegramKitchenSinkAdapter:
     async def send(self, payload):
         chat_id = str(payload.get("chat_id") or "").strip()
         text = str(payload.get("text") or "").strip()
+        chat_action = str(payload.get("chat_action") or "").strip()
         reply_to_message_id = str(payload.get("reply_to_message_id") or "").strip() or None
-        if not chat_id or not text:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="missing_required_fields: chat_id,text",
-            )
+        reaction_to_message_id = str(payload.get("reaction_to_message_id") or payload.get("message_id") or "").strip()
+        reaction = payload.get("reaction")
+        wants_reaction = bool(reaction_to_message_id or reaction is not None)
+
         if not self._bot_token:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="telegram_bot_not_configured",
             )
-
-        ok, provider_message_id, error_detail = await asyncio.to_thread(
-            self._send_message,
-            self._bot_token,
-            chat_id,
-            text,
-            reply_to_message_id,
-        )
-        if not ok:
+        if not chat_id:
             raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"telegram_send_failed:{error_detail}",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="missing_required_fields: chat_id",
             )
-        return {
-            "ok": True,
-            "provider_message_id": provider_message_id,
-        }
+
+        performed = False
+        result: dict[str, Any] = {"ok": True}
+
+        if chat_action:
+            ok, error_detail = await asyncio.to_thread(
+                self._send_chat_action,
+                self._bot_token,
+                chat_id,
+                chat_action,
+            )
+            if not ok:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"telegram_chat_action_failed:{error_detail}",
+                )
+            result["chat_action_sent"] = True
+            performed = True
+
+        if wants_reaction:
+            if not reaction_to_message_id or not isinstance(reaction, list) or not reaction:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="missing_required_fields: reaction_to_message_id,reaction",
+                )
+            ok, error_detail = await asyncio.to_thread(
+                self._set_message_reaction,
+                self._bot_token,
+                chat_id,
+                reaction_to_message_id,
+                reaction,
+            )
+            if not ok:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"telegram_reaction_failed:{error_detail}",
+                )
+            result["reaction_set"] = True
+            performed = True
+
+        if text:
+            ok, provider_message_id, error_detail = await asyncio.to_thread(
+                self._send_message,
+                self._bot_token,
+                chat_id,
+                text,
+                reply_to_message_id,
+            )
+            if not ok:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"telegram_send_failed:{error_detail}",
+                )
+            result["provider_message_id"] = provider_message_id
+            performed = True
+
+        if not performed:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="missing_supported_fields: text,chat_action,reaction",
+            )
+
+        return result
 
 
 class KitchenSinkServerPlugin:
