@@ -413,13 +413,13 @@ class TelegramKitchenSinkAdapter:
 
 class KitchenSinkServerPlugin:
     def __init__(self, ctx):
-        secret_refs = dict(ctx.secret_refs or {})
+        secrets = dict(getattr(ctx, "secrets", {}) or {})
         oauth_connections = dict(ctx.oauth_connections or {})
         github_oauth = oauth_connections.get("server_github") if isinstance(oauth_connections.get("server_github"), dict) else {}
         self._public_base_url = str(getattr(ctx.settings, "public_base_url", "") or "").strip()
         self._adapter = TelegramKitchenSinkAdapter(
-            webhook_secret=str(secret_refs.get("telegram_webhook_secret") or ""),
-            bot_token=str(secret_refs.get("telegram_bot_token") or ""),
+            webhook_secret=str(secrets.get("telegram_webhook_secret") or ""),
+            bot_token=str(secrets.get("telegram_bot_token") or ""),
             github_access_token=str(github_oauth.get("access_token") or ""),
         )
         self._custom_route = "kitchen-sink-events"
