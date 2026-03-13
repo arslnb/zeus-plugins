@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "kitchen_sink_plugin",
   "name": "Kitchen Sink Plugin",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Reference plugin covering daemon and server plugin surfaces with a real Telegram channel and GitHub OAuth.",
   "components": {
     "client": {
@@ -156,6 +156,32 @@
       }
     ]
   },
+  "ui_hints": {
+    "messaging_channels": {
+      "telegram": {
+        "primary_user_identity": {
+          "title": "Telegram Primary User Identity",
+          "description": "Collect the Telegram details this plugin should compare against inbound sender data to decide whether a message came from the primary Zeus owner or from someone else.",
+          "fields": [
+            {
+              "component": "server",
+              "name": "telegram_owner_handle",
+              "label": "Telegram handle",
+              "placeholder": "arslnb",
+              "description": "Telegram @handle for the primary Zeus owner. The plugin matches this against the inbound sender username."
+            },
+            {
+              "component": "server",
+              "name": "telegram_owner_chat_id",
+              "label": "Telegram chat ID",
+              "placeholder": "6778780942",
+              "description": "Numeric Telegram chat or sender ID for the primary Zeus owner."
+            }
+          ]
+        }
+      }
+    }
+  },
   "config_schema": {
     "client": {},
     "server": {
@@ -178,6 +204,16 @@
         "type": "string",
         "required": false,
         "secret": true
+      },
+      "telegram_owner_handle": {
+        "type": "string",
+        "required": false,
+        "secret": false
+      },
+      "telegram_owner_chat_id": {
+        "type": "string",
+        "required": false,
+        "secret": false
       }
     }
   }

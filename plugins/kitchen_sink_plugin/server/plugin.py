@@ -17,7 +17,48 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _extract_telegram_envelopes(payload: dict[str, Any]) -> list[dict[str, Any]]:
+def _normalize_identity_token(raw: Any) -> str:
+    token = str(raw or "").strip().lower().replace("@", "").replace(" ", "")
+    if not token:
+        return ""
+    digits = "".join(ch for ch in token if ch.isdigit())
+    if len(digits) >= 6:
+        return digits
+    return token
+
+
+def _telegram_sender_class(
+    *,
+    chat: dict[str, Any],
+    from_user: dict[str, Any],
+    owner_handle: str,
+    owner_chat_id: str,
+) -> str:
+    normalized_owner_handle = _normalize_identity_token(owner_handle)
+    normalized_owner_chat_id = _normalize_identity_token(owner_chat_id)
+    sender_tokens = {
+        _normalize_identity_token(from_user.get("id")),
+        _normalize_identity_token(chat.get("id")),
+        _normalize_identity_token(from_user.get("username")),
+        _normalize_identity_token(chat.get("username")),
+    }
+    sender_tokens.discard("")
+    has_configured_identity = bool(normalized_owner_handle or normalized_owner_chat_id)
+    if has_configured_identity:
+        if normalized_owner_handle and normalized_owner_handle in sender_tokens:
+            return "owner"
+        if normalized_owner_chat_id and normalized_owner_chat_id in sender_tokens:
+            return "owner"
+        return "third_party"
+    return "owner" if str(chat.get("type") or "").strip().lower() == "private" else "third_party"
+
+
+def _extract_telegram_envelopes(
+    payload: dict[str, Any],
+    *,
+    owner_handle: str = "",
+    owner_chat_id: str = "",
+) -> list[dict[str, Any]]:
     envelopes: list[dict[str, Any]] = []
     update_id = payload.get("update_id")
     update_type_keys = (
@@ -78,7 +119,12 @@ def _extract_telegram_envelopes(payload: dict[str, Any]) -> list[dict[str, Any]]
         dedupe_id = message_id_raw or update_id_raw or secrets.token_hex(8)
         message_id = f"tgk-{chat_id or 'unknown'}-{dedupe_id}"
 
-        sender_class = "owner" if str(chat.get("type") or "").strip().lower() == "private" else "third_party"
+        sender_class = _telegram_sender_class(
+            chat=chat,
+            from_user=from_user,
+            owner_handle=owner_handle,
+            owner_chat_id=owner_chat_id,
+        )
         processing_context: dict[str, Any] = {"chat_id": chat_id, "chat_action": "typing"}
         if message_id_raw:
             processing_context["reaction_to_message_id"] = message_id_raw
@@ -367,6 +413,8 @@ class TelegramKitchenSinkAdapter:
         webhook_secret: str = "",
         bot_token: str = "",
         github_access_token: str = "",
+        owner_handle: str = "",
+        owner_chat_id: str = "",
         send_message_fn=None,
         send_chat_action_fn=None,
         set_message_reaction_fn=None,
@@ -376,6 +424,8 @@ class TelegramKitchenSinkAdapter:
         self._webhook_secret = str(webhook_secret or "").strip()
         self._bot_token = str(bot_token or "").strip()
         self._github_access_token = str(github_access_token or "").strip()
+        self._owner_handle = str(owner_handle or "").strip()
+        self._owner_chat_id = str(owner_chat_id or "").strip()
         self._send_message = send_message_fn or _telegram_send_message
         self._send_chat_action = send_chat_action_fn or _telegram_send_chat_action
         self._set_message_reaction = set_message_reaction_fn or _telegram_set_message_reaction
@@ -417,7 +467,11 @@ class TelegramKitchenSinkAdapter:
         if not isinstance(payload, dict):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="payload_must_be_object")
 
-        envelopes = _extract_telegram_envelopes(payload)
+        envelopes = _extract_telegram_envelopes(
+            payload,
+            owner_handle=self._owner_handle,
+            owner_chat_id=self._owner_chat_id,
+        )
         return envelopes
 
     async def send(self, payload):
@@ -506,6 +560,7 @@ class TelegramKitchenSinkAdapter:
 
 class KitchenSinkServerPlugin:
     def __init__(self, ctx):
+        config = dict(getattr(ctx, "config", {}) or {})
         secrets = dict(getattr(ctx, "secrets", {}) or {})
         oauth_connections = dict(ctx.oauth_connections or {})
         github_oauth = oauth_connections.get("server_github") if isinstance(oauth_connections.get("server_github"), dict) else {}
@@ -514,6 +569,8 @@ class KitchenSinkServerPlugin:
             webhook_secret=str(secrets.get("telegram_webhook_secret") or ""),
             bot_token=str(secrets.get("telegram_bot_token") or ""),
             github_access_token=str(github_oauth.get("access_token") or ""),
+            owner_handle=str(config.get("telegram_owner_handle") or ""),
+            owner_chat_id=str(config.get("telegram_owner_chat_id") or ""),
         )
         self._custom_route = "kitchen-sink-events"
         self._enabled = False

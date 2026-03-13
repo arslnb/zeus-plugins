@@ -3,7 +3,9 @@
   "config": {
     "client": {},
     "server": {
-      "github_client_id": "github-oauth-client-id"
+      "github_client_id": "github-oauth-client-id",
+      "telegram_owner_handle": "arslnb",
+      "telegram_owner_chat_id": "6778780942"
     }
   },
   "secrets": {

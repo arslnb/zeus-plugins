@@ -51,6 +51,13 @@ Set these server secrets during install/configure:
 - `telegram_bot_token`: Telegram bot token from BotFather
 - `telegram_webhook_secret`: shared secret sent by Telegram as `X-Telegram-Bot-Api-Secret-Token`
 
+Optional but recommended primary-owner identity fields:
+
+- `telegram_owner_handle`: Telegram username for the primary Zeus owner
+- `telegram_owner_chat_id`: Telegram chat or sender ID for the primary Zeus owner
+
+In the macOS app, these appear under `Settings -> Messaging Channels -> Telegram Settings` once the updated plugin version is installed.
+
 Set `ZEUS_PUBLIC_BASE_URL` on the messaging server. On plugin enable/reload, the plugin auto-registers:
 
 - webhook URL: `${ZEUS_PUBLIC_BASE_URL}/v1/channels/telegram/webhook`
@@ -92,4 +99,5 @@ Requested scopes:
 - The channel is now named `telegram`. The old built-in Telegram adapter path has been removed from Zeus.
 - The server OAuth provider is a real GitHub OAuth app configuration, not an example URL.
 - The plugin no longer needs a separate GitHub PAT or `api_base` to exercise GitHub. It uses the stored `server_github` OAuth access token.
+- The primary-owner identity UI is exposed through `ui_hints.messaging_channels.telegram.primary_user_identity`, but the plugin still owns the sender matching logic.
 - The plugin uses `python3` as its declared prerequisite so it is installable as a real registry package.
