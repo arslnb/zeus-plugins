@@ -14,6 +14,7 @@ This plugin exists to prove that one plugin package can declare and load:
 - a real Telegram-backed custom server channel and webhook
 - a real GitHub OAuth provider on the server side
 - real GitHub API usage over that server-side OAuth session
+- daemon-side GitHub tools backed by signed server plugin actions
 - agent-driven replies routed back through the plugin channel send path
 
 It is primarily a testing and regression fixture, not an end-user productivity plugin.
@@ -88,6 +89,13 @@ https://<your-zeus-server>/v1/plugins/oauth/callback
 
 Start the server-managed OAuth flow with provider id `server_github`.
 
+Once connected, the daemon-side plugin tools become available:
+
+- `github_me`
+- `github_notifications`
+
+These tools do not use a separate PAT. They proxy through the signed server route `POST /v1/client/plugins/kitchen_sink_plugin/actions/{action}`, and the server plugin executes the GitHub API call with the stored `server_github` OAuth token.
+
 Requested scopes:
 
 - `read:user`
@@ -99,5 +107,6 @@ Requested scopes:
 - The channel is now named `telegram`. The old built-in Telegram adapter path has been removed from Zeus.
 - The server OAuth provider is a real GitHub OAuth app configuration, not an example URL.
 - The plugin no longer needs a separate GitHub PAT or `api_base` to exercise GitHub. It uses the stored `server_github` OAuth access token.
+- The GitHub daemon tools are `github_me` and `github_notifications`; they are backed by signed server plugin actions, not direct client-side GitHub calls.
 - The primary-owner identity UI is exposed through `ui_hints.messaging_channels.telegram.primary_user_identity`, but the plugin still owns the sender matching logic.
 - The plugin uses `python3` as its declared prerequisite so it is installable as a real registry package.

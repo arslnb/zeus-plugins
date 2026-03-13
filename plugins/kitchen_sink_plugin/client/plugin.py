@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import asyncio
+
+from services import messaging_server_client
+
 
 class KitchenSinkClientPlugin:
     def __init__(self, ctx):
@@ -11,6 +15,29 @@ class KitchenSinkClientPlugin:
             "kitchen_lookup": {
                 "description": "Return a stable fixture payload from the kitchen sink plugin.",
                 "handler": self.kitchen_lookup,
+            },
+            "github_me": {
+                "description": "Return the connected GitHub profile using the plugin's server-side OAuth session.",
+                "handler": self.github_me,
+                "input_schema": {
+                    "type": "object",
+                    "properties": {},
+                },
+            },
+            "github_notifications": {
+                "description": "Return unread GitHub notifications using the plugin's server-side OAuth session.",
+                "handler": self.github_notifications,
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20,
+                            "description": "Maximum number of notifications to return.",
+                        }
+                    },
+                },
             }
         }
 
@@ -41,6 +68,37 @@ class KitchenSinkClientPlugin:
             "runtime_name": context.get("runtime_name"),
             "plugin_configured": bool(self.config),
         }
+
+    async def github_me(self, payload, context):
+        del payload
+        result = await asyncio.to_thread(
+            messaging_server_client.invoke_plugin_action,
+            plugin_id=str(context.get("plugin_id") or "kitchen_sink_plugin"),
+            action="github_me",
+            payload={},
+        )
+        out = dict(result or {})
+        out.setdefault("status", "ok")
+        out.setdefault("kind", "tool")
+        return out
+
+    async def github_notifications(self, payload, context):
+        limit_value = payload.get("limit") if isinstance(payload, dict) else None
+        try:
+            limit = int(limit_value)
+        except Exception:
+            limit = 5
+        limit = max(1, min(limit, 20))
+        result = await asyncio.to_thread(
+            messaging_server_client.invoke_plugin_action,
+            plugin_id=str(context.get("plugin_id") or "kitchen_sink_plugin"),
+            action="github_notifications",
+            payload={"limit": limit},
+        )
+        out = dict(result or {})
+        out.setdefault("status", "ok")
+        out.setdefault("kind", "tool")
+        return out
 
     async def call_command(self, name, payload, context):
         return {

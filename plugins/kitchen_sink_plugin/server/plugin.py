@@ -590,6 +590,81 @@ class KitchenSinkServerPlugin:
             }
         }
 
+    def actions(self):
+        return {
+            "github_me": self.github_me,
+            "github_notifications": self.github_notifications,
+        }
+
+    async def github_me(self, payload=None, context=None):
+        del payload, context
+        if not self._adapter._github_access_token:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="github_oauth_not_connected",
+            )
+        try:
+            profile = await asyncio.to_thread(
+                self._adapter._github_request_json,
+                access_token=self._adapter._github_access_token,
+                path="/user",
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"github_request_failed:{exc}",
+            ) from exc
+        if not isinstance(profile, dict):
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="github_profile_response_invalid",
+            )
+        return {
+            "ok": True,
+            "action": "github_me",
+            "text": _format_github_me(profile),
+            "profile": profile,
+        }
+
+    async def github_notifications(self, payload=None, context=None):
+        del context
+        if not self._adapter._github_access_token:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="github_oauth_not_connected",
+            )
+        raw_payload = payload if isinstance(payload, dict) else {}
+        try:
+            limit = int(raw_payload.get("limit") or 5)
+        except Exception:
+            limit = 5
+        limit = max(1, min(limit, 20))
+        query = urllib.parse.urlencode(
+            {
+                "all": "false",
+                "participating": "false",
+                "per_page": str(limit),
+            }
+        )
+        try:
+            notifications = await asyncio.to_thread(
+                self._adapter._github_request_json,
+                access_token=self._adapter._github_access_token,
+                path=f"/notifications?{query}",
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"github_request_failed:{exc}",
+            ) from exc
+        return {
+            "ok": True,
+            "action": "github_notifications",
+            "limit": limit,
+            "text": _format_github_notifications(notifications),
+            "notifications": notifications,
+        }
+
     async def handle_custom_event(self, request=None, body=b"", **kwargs):
         del request, kwargs
         try:

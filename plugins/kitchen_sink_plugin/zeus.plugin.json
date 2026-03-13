@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "kitchen_sink_plugin",
   "name": "Kitchen Sink Plugin",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Reference plugin covering daemon and server plugin surfaces with a real Telegram channel and GitHub OAuth.",
   "components": {
     "client": {
@@ -22,6 +22,18 @@
       "name": "kitchen_lookup",
       "enabled": true,
       "allow_network": false,
+      "allow_without_approval": true
+    },
+    {
+      "name": "github_me",
+      "enabled": true,
+      "allow_network": true,
+      "allow_without_approval": true
+    },
+    {
+      "name": "github_notifications",
+      "enabled": true,
+      "allow_network": true,
       "allow_without_approval": true
     }
   ],
@@ -60,6 +72,16 @@
       "kitchen_lookup": {
         "enabled": true,
         "allow_network": false,
+        "allow_without_approval": true
+      },
+      "github_me": {
+        "enabled": true,
+        "allow_network": true,
+        "allow_without_approval": true
+      },
+      "github_notifications": {
+        "enabled": true,
+        "allow_network": true,
         "allow_without_approval": true
       }
     }
